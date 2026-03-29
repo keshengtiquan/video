@@ -1,11 +1,11 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -13,29 +13,68 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const SEARCH_HISTORY_KEY = "@search_history";
 
 export default function SearchScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
+  // 加载搜索历史
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const history = await AsyncStorage.getItem(SEARCH_HISTORY_KEY);
+        if (history) {
+          setSearchHistory(JSON.parse(history));
+        }
+      } catch (error) {
+        console.error("加载搜索历史失败:", error);
+      }
+    };
+    loadHistory();
+  }, []);
+
+  // 保存搜索历史
+  const saveHistory = async (history: string[]) => {
+    try {
+      await AsyncStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+    } catch (error) {
+      console.error("保存搜索历史失败:", error);
+    }
+  };
+
   const handleSearch = (query: string) => {
     if (!query.trim()) return;
 
     setSearchHistory((prev) => {
-      if (prev.includes(query)) return prev;
-      return [query, ...prev].slice(0, 10);
+      const newHistory = prev.includes(query)
+        ? prev
+        : [query, ...prev].slice(0, 10);
+      saveHistory(newHistory);
+      return newHistory;
     });
 
     router.push({ pathname: "/search-result", params: { query } });
   };
 
-  const clearHistory = () => {
+  const clearHistory = async () => {
     setSearchHistory([]);
+    try {
+      await AsyncStorage.removeItem(SEARCH_HISTORY_KEY);
+    } catch (error) {
+      console.error("清空搜索历史失败:", error);
+    }
   };
 
   const removeHistoryItem = (item: string) => {
-    setSearchHistory((prev) => prev.filter((i) => i !== item));
+    setSearchHistory((prev) => {
+      const newHistory = prev.filter((i) => i !== item);
+      saveHistory(newHistory);
+      return newHistory;
+    });
   };
 
   return (

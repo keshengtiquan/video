@@ -9,13 +9,13 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SearchResultScreen() {
   const router = useRouter();

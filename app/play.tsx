@@ -3,7 +3,6 @@ import { VideoView, useVideoPlayer } from "expo-video";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Episode {
   name: string;
@@ -130,7 +130,7 @@ export default function PlayScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <ScrollView style={styles.scrollView}>
         {/* 视频播放器 */}
         <View style={[styles.videoContainer, { height: videoHeight }]}>
