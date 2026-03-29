@@ -8,17 +8,15 @@ import { useRouter } from "expo-router";
 
 const categories: MovieCategory[] = [
   "热门",
-  "最新",
-  "豆瓣高分",
-  "经典",
-  "华语",
-  "欧美",
-  "动作",
-  "喜剧",
-  "爱情",
-  "科幻",
-  "悬疑",
-  "治愈",
+  "美剧",
+  "英剧",
+  "韩剧",
+  "日剧",
+  "国产剧",
+  "综艺",
+  "港剧",
+  "日本动画",
+  "纪录片",
 ];
 
 function MovieTabContent({
@@ -38,7 +36,7 @@ function MovieTabContent({
     hasMore,
     onRefresh,
     onLoadMore,
-  } = useMovieList("movie", tag, isActive);
+  } = useMovieList("tv", tag, isActive);
 
   const handleMoviePress = useCallback((movie: Movie) => {
     router.push({ pathname: "/search-result", params: { query: movie.title } });
@@ -61,7 +59,7 @@ function MovieTabContent({
   );
 }
 
-export default function Index() {
+export default function TVScreen() {
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
 
@@ -95,7 +93,7 @@ export default function Index() {
       onIndexChange={setIndex}
       initialLayout={{ width: layout.width }}
       renderScene={renderScene}
-      lazy={true}
+      lazy
     />
   );
 }
