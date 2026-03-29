@@ -53,13 +53,33 @@ export default function SearchResultScreen() {
     }
   }, [params.query]);
 
+  const handleItemPress = (item: SearchResult) => {
+    router.push({
+      pathname: "/play",
+      params: {
+        name: item.name,
+        url: item.url,
+        pic: item.pic,
+        source: item.source,
+      },
+    });
+  };
+
   const renderItem = ({ item }: { item: SearchResult }) => (
-    <TouchableOpacity style={styles.resultItem}>
+    <TouchableOpacity
+      style={styles.resultItem}
+      onPress={() => handleItemPress(item)}
+    >
       <Image source={{ uri: item.pic }} style={styles.resultPic} />
       <View style={styles.resultInfo}>
         <Text style={styles.resultName} numberOfLines={2}>
           {item.name}
         </Text>
+        {(item.vodLang || item.vodDuration || item.vodYear) && (
+          <Text style={styles.resultMeta}>
+            {[item.vodLang, item.vodDuration, item.vodYear].filter(Boolean).join(' · ')}
+          </Text>
+        )}
         <Text style={styles.resultSource}>
           来源: {getSourceLabel(item.source)}
         </Text>
@@ -230,6 +250,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333",
     fontWeight: "500",
+    marginBottom: 4,
+  },
+  resultMeta: {
+    fontSize: 12,
+    color: "#666",
     marginBottom: 4,
   },
   resultSource: {

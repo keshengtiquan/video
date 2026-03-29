@@ -1,4 +1,7 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const STORAGE_KEY = "@selected_play_sources";
 
 const playSources = [
   { label: "豆瓣", value: "https://dbzy.tv/api.php/provide/vod" },
@@ -26,6 +29,38 @@ const PlaySourceContext = createContext<PlaySourceContextType | null>(null);
 
 export function PlaySourceProvider({ children }: { children: ReactNode }) {
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    loadSelectedSources();
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveSelectedSources(selectedSources);
+    }
+  }, [selectedSources, isLoaded]);
+
+  const loadSelectedSources = async () => {
+    try {
+      const saved = await AsyncStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        setSelectedSources(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error("Failed to load selected sources:", e);
+    } finally {
+      setIsLoaded(true);
+    }
+  };
+
+  const saveSelectedSources = async (sources: string[]) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(sources));
+    } catch (e) {
+      console.error("Failed to save selected sources:", e);
+    }
+  };
 
   const toggleSource = (value: string) => {
     setSelectedSources((prev) =>
