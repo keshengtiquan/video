@@ -1,6 +1,7 @@
+import { useEventListener } from "expo";
 import { useLocalSearchParams } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -11,6 +12,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSaveProgress } from "../hooks/useSaveProgress";
 
 interface Episode {
   name: string;
@@ -28,8 +30,6 @@ export interface ParsedPlayInfo {
 }
 
 function parsePlayUrl(url: string): ParsedPlayInfo {
-  console.log("原始播放地址:", url);
-
   if (!url) {
     return { sources: [], rawUrl: url };
   }
@@ -86,8 +86,6 @@ function parsePlayUrl(url: string): ParsedPlayInfo {
     }
   });
 
-  console.log("解析后的播放源:", JSON.stringify(sources, null, 2));
-
   return { sources, rawUrl: url };
 }
 
@@ -97,23 +95,78 @@ export default function PlayScreen() {
     url?: string;
     pic?: string;
     source?: string;
+    sourceIndex?: string;
+    episodeIndex?: string;
   }>();
 
   const parsedInfo = useMemo(() => {
     return parsePlayUrl(params.url || "");
   }, [params.url]);
 
-  const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
-  const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
+  const [currentSourceIndex, setCurrentSourceIndex] = useState(
+    params.sourceIndex ? parseInt(params.sourceIndex, 10) : 0,
+  );
+  const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(
+    params.episodeIndex ? parseInt(params.episodeIndex, 10) : 0,
+  );
   const { width } = useWindowDimensions();
 
-  const currentSource = parsedInfo.sources[currentSourceIndex];
+  // 如果是直接视频URL（不是编码格式），创建一个虚拟的播放源
+  const effectiveSources = useMemo(() => {
+    if (parsedInfo.sources.length === 0 && params.url?.startsWith("http")) {
+      return [
+        {
+          name: "播放源1",
+          episodes: [{ name: "第1集", url: params.url || "" }],
+        },
+      ];
+    }
+    return parsedInfo.sources;
+  }, [parsedInfo, params.url]);
+
+  const currentSource = effectiveSources[currentSourceIndex];
   const currentEpisode = currentSource?.episodes[currentEpisodeIndex];
   const videoHeight = (width / 16) * 9;
 
   const player = useVideoPlayer(currentEpisode?.url || "", (player) => {
     player.play();
   });
+  useEventListener(player, "statusChange", ({ status }) => {
+    console.log("Player status changed: ", status);
+  });
+
+  // 视频信息，用于保存进度
+  // 用 name + url 作为 id，同一部剧只保存一条记录
+  const videoInfo = useMemo(
+    () =>
+      currentEpisode && params.name
+        ? {
+            id: `${params.name}-${params.url}`,
+            name: params.name,
+            url: params.url || currentEpisode.url,
+            pic: params.pic,
+            sourceIndex: currentSourceIndex,
+            episodeIndex: currentEpisodeIndex,
+          }
+        : null,
+    [
+      params.name,
+      params.pic,
+      currentEpisode,
+      params.url,
+      currentSourceIndex,
+      currentEpisodeIndex,
+    ],
+  );
+
+  const { restoreProgress } = useSaveProgress(player, videoInfo);
+
+  // 加载历史进度
+  useEffect(() => {
+    if (player && videoInfo) {
+      restoreProgress();
+    }
+  }, [player, videoInfo, restoreProgress]);
 
   const handleEpisodePress = (index: number) => {
     setCurrentEpisodeIndex(index);

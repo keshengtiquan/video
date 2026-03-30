@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  
+
   return (
     <Tabs
       screenOptions={{
@@ -48,6 +48,17 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <FontAwesome size={28} name="history" color={color} />
           ),
+          header: () => (
+            <View
+              style={[
+                styles.header,
+                styles.historyHeader,
+                { paddingTop: insets.top },
+              ]}
+            >
+              <Text style={styles.headerTitle}>历史记录</Text>
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
@@ -77,6 +88,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     width: "100%",
     backgroundColor: "#fff",
+  },
+  historyHeader: {
+    justifyContent: "space-between",
   },
   headerTitle: {
     fontSize: 18,
