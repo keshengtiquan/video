@@ -49,10 +49,11 @@ function parsePlayUrl(url: string): ParsedPlayInfo {
       const dollarIndex = firstPart.indexOf("$");
       // 忽略原始源名，强制使用"播放源1"、"播放源2"
       sourceName = `播放源${index + 1}`;
+      const firstEpName = firstPart.substring(0, dollarIndex);
       const firstUrl = firstPart.substring(dollarIndex + 1);
 
       if (firstUrl.startsWith("http")) {
-        episodes.push({ name: sourceName, url: firstUrl });
+        episodes.push({ name: firstEpName, url: firstUrl });
       }
 
       for (let i = 1; i < hashParts.length; i++) {
@@ -110,7 +111,9 @@ export default function PlayScreen() {
   const currentEpisode = currentSource?.episodes[currentEpisodeIndex];
   const videoHeight = (width / 16) * 9;
 
-  const player = useVideoPlayer(currentEpisode?.url || "");
+  const player = useVideoPlayer(currentEpisode?.url || "", (player) => {
+    player.play();
+  });
 
   useEffect(() => {
     return () => {
