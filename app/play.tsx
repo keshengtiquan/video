@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -114,14 +114,6 @@ export default function PlayScreen() {
   const player = useVideoPlayer(currentEpisode?.url || "", (player) => {
     player.play();
   });
-
-  useEffect(() => {
-    return () => {
-      if (player && typeof player.release === "function") {
-        player.release();
-      }
-    };
-  }, [player]);
 
   const handleEpisodePress = (index: number) => {
     setCurrentEpisodeIndex(index);
