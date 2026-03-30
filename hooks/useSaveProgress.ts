@@ -27,6 +27,7 @@ export function useSaveProgress(
   const playerRef = useRef(player);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSavingRef = useRef(false);
+  const isFirstLoadRef = useRef(true);
 
   // 保持引用最新
   videoInfoRef.current = videoInfo;
@@ -91,20 +92,17 @@ export function useSaveProgress(
     });
   }, [saveProgress]);
 
-  // 恢复进度
+  // 恢复进度（只在首次进入时恢复，切换剧集时不恢复）
   const restoreProgress = useCallback(async () => {
     if (!player || !videoInfo) return;
-    console.log(`[恢复进度] videoInfo:`, JSON.stringify(videoInfo));
+
+    // 只有首次进入时才恢复进度
+    if (!isFirstLoadRef.current) return;
+    isFirstLoadRef.current = false;
+
     const history = await getPlayHistoryById(videoInfo.id);
-    if (history) {
-      console.log(
-        `[历史记录] ${history.name} - 第${history.episodeIndex + 1}集 - 找到进度: ${Math.floor(history.currentTime)}秒, url: ${history.url}`,
-      );
-      if (history.currentTime > 10) {
-        player.currentTime = history.currentTime;
-      }
-    } else {
-      console.log(`[历史记录] 未找到 ${videoInfo.name} 的播放记录`);
+    if (history && history.currentTime > 10) {
+      player.currentTime = history.currentTime;
     }
   }, [player, videoInfo]);
 
